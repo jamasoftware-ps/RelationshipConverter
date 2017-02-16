@@ -118,18 +118,30 @@ def evaluate_relationships(project_id, from_item, to_type, old_type, new_type):
 
     url = base_url + "items/" + str(from_item) + "/downstreamrelationships/"
     response = requests.get(url, auth=(username, password))
-    if response.status_code >= 400:
-        print response.text
-    json_response = json.loads(response.text)
-
-    relationships = json_response["data"]
-    for relationship in relationships:
-        to_item = relationship["toItem"]
-        relationship_type = relationship["relationshipType"]
-        if relationship_type != new_type and is_item_of_type(to_item, to_type):
-            if old_type == -1 or old_type == relationship_type:
-                print "\nUpdating relationship " + str(relationship["id"]) + " from relationshipType " + str(old_type) + " to relationshipType " + str(new_type)
-                successes += update_relationship(relationship["id"], from_item, to_item, new_type)
+    if response.status_code == 404:
+        #allow execution if error is 404, item not found.
+        print "from_item: " + str(from_item)
+        print "response.status_code: " + response.status_code
+        print "response.text: " + response.text
+    elif response.status_code >= 400:
+        print "from_item: " + str(from_item)
+        print "response.status_code: " + response.status_code
+        print "response.text: " + response.text
+        sys.exit(1)
+    else: 
+        #This else condition is critical as the calling method 'get_items_of_type' get ALL items, 
+        #even soft deleted items, which will return a 404 error causing exceptions and script termination.
+        #If we don't encounter an error we should continue on with the other relationships.
+        json_response = json.loads(response.text)
+        relationships = json_response["data"]
+        for relationship in relationships:
+            to_item = relationship["toItem"]
+            relationship_type = relationship["relationshipType"]
+            if relationship_type != new_type and is_item_of_type(to_item, to_type):
+                if old_type == -1 or old_type == relationship_type:
+                    print "\nUpdating relationship " + str(relationship["id"]) + " from relationshipType " + str(old_type) + " to relationshipType " + str(new_type)
+                    successes += update_relationship(relationship["id"], from_item, to_item, new_type)
+                    
     return successes
 
 
