@@ -115,21 +115,34 @@ def get_items_of_type(project_id, from_type, to_type, new_type, old_type):
 
 def evaluate_relationships(project_id, from_item, to_type, old_type, new_type):
     successes = 0
+    remaining_results = -1
+    start_index = 0
+    
+    while remaining_results != 0:
+        start_at = "startAt=" + str(start_index)
+        url = base_url + "items/" + str(from_item) + "/downstreamrelationships?" + start_at
+        response = requests.get(url, auth=(username, password))
+        if response.status_code >= 400:
+            print response.text
+        json_response = json.loads(response.text)
+        
+        if "pageInfo" in json_response["meta"]:
+            page_info = json_response["meta"]["pageInfo"]
+            total_results = page_info["totalResults"]
+            result_count = page_info["resultCount"]
+            remaining_results = total_results - (start_index + result_count)
+            start_index += 20
+        else:
+            remaining_results = 0;
 
-    url = base_url + "items/" + str(from_item) + "/downstreamrelationships/"
-    response = requests.get(url, auth=(username, password))
-    if response.status_code >= 400:
-        print response.text
-    json_response = json.loads(response.text)
-
-    relationships = json_response["data"]
-    for relationship in relationships:
-        to_item = relationship["toItem"]
-        relationship_type = relationship["relationshipType"]
-        if relationship_type != new_type and is_item_of_type(to_item, to_type):
-            if old_type == -1 or old_type == relationship_type:
-                print "\nUpdating relationship " + str(relationship["id"]) + " from relationshipType " + str(old_type) + " to relationshipType " + str(new_type)
-                successes += update_relationship(relationship["id"], from_item, to_item, new_type)
+        relationships = json_response["data"]
+        for relationship in relationships:
+            to_item = relationship["toItem"]
+            relationship_type = relationship["relationshipType"]
+            if relationship_type != new_type and is_item_of_type(to_item, to_type):
+                if old_type == -1 or old_type == relationship_type:
+                    print "\nUpdating relationship " + str(relationship["id"]) + " from relationshipType " + str(old_type) + " to relationshipType " + str(new_type)
+                    successes += update_relationship(relationship["id"], from_item, to_item, new_type)
     return successes
 
 
