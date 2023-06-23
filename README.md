@@ -10,7 +10,8 @@ Please visit [dev.jamasoftware.com](http://dev.jamasoftware.com) for additional 
 Please note that this script is distrubuted as-is as an example and will likely require modification to work for your specific use-case.  This example omits error checking. Jama Support will not assist with the use or modification of the script.
 
 ### Before you begin
-- Install Python 2.7 or higher and the requests library.  [Python](https://www.python.org/) and [Requests](http://docs.python-requests.org/en/latest/)
+- Install Python 3.7 or higher. To install all dependencies from requirements.txt file, run pip3 install.  
+- [Python Download](https://www.python.org/)
 
 ### Setup
 1. As always, set up a test environment and project to test the script.
